@@ -10,7 +10,9 @@ module.exports = {
         type: Sequelize.INTEGER
       },
       voterId: {
-        type: Sequelize.STRING
+        type: Sequelize.STRING,
+        allowNull: false,
+        unique: true
       },
       password: {
         type: Sequelize.STRING
