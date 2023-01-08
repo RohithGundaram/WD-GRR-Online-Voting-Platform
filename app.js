@@ -91,9 +91,72 @@ passport.deserializeUser((obj, done) => {done(null, obj);});
 
 //loginpage(landing page)
 app.get("/",(request, response)=>{
+    if(request.user && request.user.id){
+        return response.redirect("/home");
+    }
     response.render("adminLogin", { csrf: request.csrfToken() });
 })
 
+//SignUp page
+app.get("/adminSignup", (request,response)=>{
+    response.render("adminSignup", {csrf: request.csrfToken()});
+});
 
+//create new Admin(Signing Up)
+app.post("/addAdmin",async(request, response)=>{
+    if (request.body.name.length === 0) {
+        request.flash("error", "Username cannot be empty!");
+        return response.redirect("/adminSignup");
+    }
+    if(request.body.email.trim().length === 0){
+        request.flash("error", "Email address cannot be empty!");
+        return response.redirect("/adminSignup");
+    }
+    if (request.body.password.length === 0) {
+        request.flash("error", "Password cannot be empty!");
+        return response.redirect("/adminSignup");
+    }
+    const admin = await Admins.findOne({ where: { email: request.body.email } });
+    if (admin) {
+        request.flash("error", "Email already exists!");
+        return response.redirect("/adminSignup");
+    }
 
+    const hashpswd = await bcrypt.hash(request.body.password, 10);
+    try{
+        const admin = await Admins.create({
+            name: request.body.name,
+            email: request.body.email,
+            password: hashpswd,
+        });
+        request.login(user, (err)=>{
+            if(err){
+                console.log(err);
+                response.redirect("/");
+            }
+            else{
+                request.flash("success","Sign up successful");
+                response.redirect("/home");
+            }
+        });
+    } catch(error){
+        request.flash("error", error.message);
+        return response.redirect("/adminSignup")
+    }
+
+})
+
+//Logging In the Admin
+app.get("/home", connectEnsureLogin.ensureLoggedIn(),
+    async(request,response)=>{
+        const loggedInAdminID = request.user.id;
+        const admin = await Admins.findByPk(loggedInAdminID);
+        const elections = await Elections.findAll({where: { adminID: request.user.id },});
+        response.render("/home", {
+            username: admin.name,
+            elections: elections,
+            csrf: request.csrfToken(),
+        });
+    }
+)
 module.exports=app;

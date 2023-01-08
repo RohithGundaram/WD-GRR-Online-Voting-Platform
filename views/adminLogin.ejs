@@ -35,12 +35,12 @@
         <div class="flex-col bg-white login-form" style="justify-content: center;padding-left:5rem;border-radius: 19px;position: relative;top: 3rem;left: 48rem;width: 38%;height: 85%;">
             <h1 class="fs-2 fw-bold" style="color: #1196b5;">Admin LogIn</h1>
             
-            <form action="/session" method="post" class="adminLoginForm">
+            <form action="/home" method="post" class="adminLoginForm">
                 <input type="hidden" name="_csrf" value="<%= csrf %>">
                 <div class="flex-col" style="width: 75%; padding:1rem;">
                     <div class="justify-content-spacebetween">
                         <label style="margin:0.2em;font-weight: 500;" for="email">Email</label>
-                        <span>Need an account? <a href="#" style="font-weight: bolder;color: #1196b5;">SignUp</a></span>
+                        <span>Need an account? <a href="/adminSignup" style="font-weight: bolder;color: #1196b5;">SignUp</a></span>
                     </div>
                     <input style="margin:0.2em;" type="email" name="email" id="email">
                     <div class="justify-content-spacebetween" style="margin-top: 10px;">
