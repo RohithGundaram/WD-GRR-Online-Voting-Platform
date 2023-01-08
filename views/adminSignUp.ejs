@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="../public/css/styles.css">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-GLhlTQ8iRABdZLl6O3oVMWSktQOp6b7In1Zl3/Jr59b6EGGoI1aFkw7cmDA6j6gD" crossorigin="anonymous">
+    <script src="https://kit.fontawesome.com/6353074471.js" crossorigin="anonymous"></script>
+    <title>Admin SignUp</title>
+    <script>
+        function togglePassword() {
+        var x = document.getElementById("password");
+        if (x.type === "password") {
+        x.type = "text";
+        document.getElementById("eye").classList.remove("fa-eye");
+        document.getElementById("eye").classList.add("fa-eye-slash");
+        } else {
+        x.type = "password";
+        document.getElementById("eye").classList.remove("fa-eye-slash");
+        document.getElementById("eye").classList.add("fa-eye");
+        }
+    }
+    </script>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg bg-info-subtle">
+        <div class="container-fluid">
+            <div>
+                <a class="navbar-brand" href="/"><img src="../public/images/logo.jpg" alt="Vote" class="logo-width" style="color: #1196b5;">Online Voting Platform</a>
+            </div>
+        </div>
+    </nav>
+    <div class="body-class">
+        <div class="flex-col bg-white login-form" style="padding: 2rem 1rem 2rem 6rem; border-radius: 19px;position: relative;top: 3rem;left: 48rem;width: 42%;height: 85%;">
+            <div>
+                <h1 class="fs-2 fw-bold" style="margin-bottom:1rem; color: #1196b5;">Admin SignUp</h1>
+            </div>
+            <div>
+                <form action="/session" method="post" class="adminLoginForm">
+                    <input type="hidden" name="_csrf" value="<%= csrf %>">
+                    <div class="flex-col" style="width:70%">
+                        <div class="justify-content-spacebetween">
+                            <label style="margin:0.2em;font-weight: 500;" for="name">Name</label>
+                            <span>Already have an account? <a href="#" style="font-weight: bolder;color: #1196b5;">LogIn</a></span>
+                        </div>
+                        <input style="margin:0.2em;" type="name" name="name" id="name">
+                        <label style="margin:0.2em;font-weight: 500;" for="email">Email</label>
+                        <input style="margin:0.2em;" type="email" name="email" id="email">
+                        <div class="justify-content-spacebetween" style="margin-top: 10px;">
+                            <label style="margin:0.2em;font-weight: 500;" for="password">Password</label>
+                            <span style="margin-right: 15px;" onclick="togglePassword()"><i id="eye" class="fa-solid fa-eye"></i></span>
+                        </div>
+                        <input style="margin:0.2em;" type="password" name="password" id="password">
+                    </div>
+                    <!-- flash messages -->
+                    <div class="flex">
+                        <% if (messages && messages.error && messages.error.length > 0) { %>
+                            <% for(var i=0; i<messages.error.length; i++) { %>
+                                <p class="alert alert-danger my-2 rounded-md px-4 py-2" role="alert" style="width: 69%;">Lorem ipsum dolor sit amet.</p>
+                            <% } %>
+                        <% } %>
+                    </div>
+                    <button class="btn my-2" style="background-color: #1196b5;color:white;width: 69%">Log In</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
