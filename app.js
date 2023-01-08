@@ -12,6 +12,13 @@ const connectEnsureLogin = require("connect-ensure-login");
 const passport = require("passport");
 const flash = require("connect-flash");
 const { request } = require("http");
+const { response } = require("express");
+
+app.use(flash());
+app.use(bodyParser.json());
+app.use(express.urlencoded({ extended: false }));
+app.use(cookieParser("random sectret string for parsing"));
+app.use(csrf("this_should_be_32_character_long", ["POST", "PUT", "DELETE"]));
 
 app.use(session({
     secret: "my-super-secret-key-5694063250764129",
@@ -25,15 +32,11 @@ app.use((request, response, next)=>{
     next();
 });
 
-app.use(express.static(path.join(__dirname,"public")));
+app.use(express.static("images"));
 app.use(passport.initialize());
 app.use(passport.session());
 
-app.use(flash());
-app.use(bodyParser.json());
-app.use(express.urlencoded({ extended: false }));
-app.use(cookieParser("random sectret string for parsing"));
-app.use(csrf("this_should_be_32_character_long", ["POST", "PUT", "DELETE"]));
+
 
 //passport session for admin
 passport.use("admin-local",new LocalStratergy({
@@ -84,3 +87,13 @@ passport.use("voter-local",new LocalStratergy({
 
 passport.serializeUser((user, done) => {done(null, user);});
 passport.deserializeUser((obj, done) => {done(null, obj);});
+
+
+//loginpage(landing page)
+app.get("/",(request, response)=>{
+    response.render("adminLogin", { csrf: request.csrfToken() });
+})
+
+
+
+module.exports=app;
