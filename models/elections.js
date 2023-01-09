@@ -26,12 +26,13 @@ module.exports = (sequelize, DataTypes) => {
     }
 
     static async add({electionName, adminID}) {
-      return this.create({
-        electionName,
+      const res = await Elections.create({
+        adminID: adminID,
+        electionName: electionName,
         isElectionLive: false,
         ended: false,
-        adminID,
       });
+      return res;
     }
 
     static async live(id) {
@@ -74,13 +75,7 @@ module.exports = (sequelize, DataTypes) => {
   }
 
   Elections.init({
-    electionName: {
-      type: DataTypes.STRING,
-      allowNull: false,
-      validate:{
-        notNull: true,
-      },
-    },
+    electionName: DataTypes.STRING,
     isElectionLive: DataTypes.BOOLEAN,
     ended: DataTypes.BOOLEAN,
     }, 

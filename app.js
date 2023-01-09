@@ -14,6 +14,8 @@ const flash = require("connect-flash");
 const { request } = require("http");
 const { response } = require("express");
 
+const saltRounds = 10;
+
 app.use(flash());
 app.use(bodyParser.json());
 app.use(express.urlencoded({ extended: false }));
@@ -48,15 +50,15 @@ passport.use("admin-local",new LocalStratergy({
 (username, password, done) =>{
     Admins.findOne({ where: { email: username }})
     .then(async (user) =>{
-        const check = await bcrypt.compare(password, user.password);
-        if(check){
+        const result = await bcrypt.compare(password, user.password);
+        if(result){
             return done(null, user);
         } else{
             return done(null, false, {message: "Invalid Password"});
         }
     })
     .catch((error)=>{
-        console.log(error); //remove final console log if no error
+        // console.log(error);
         return done(null, false,{message: "Please register/SignUp to LogIn !"});
     })
 }));
@@ -67,26 +69,35 @@ passport.use("admin-local",new LocalStratergy({
 passport.use("voter-local",new LocalStratergy({
     usernameField: "voterID",
     passwordField: "password",
-    passReqToCallback: true,
+    passReqToCallback: true, //ckeck with and without
 },
-(request, username, password, done)=>{
-    Voters.findOne({where: {voterID: username, electionID: request.params.id},})
-    .then(async(voter)=>{
-        const check = await bcrypt.compare(password, voter.password);
-        if(check){
-            return done(null, voter);
+(request, voterID, password, done)=>{ //made some changes using rohithlingkar
+    // Voters.findOne({where: {voterID: username, electionID: request.params.id},})
+    Voters.findOne({where: { voterID },})
+    // .then(async(voter)=>{
+    .then(async(user)=>{
+        const result = await bcrypt.compare(password, user.password);
+        if(result){
+            return done(null, user);
         } else {
             return done(null, false, { message: "Invalid Password" });
         }
     })
     .catch((error)=>{
-        console.log(error);
+        // console.log(error);
         return done(null, false, {message: "Your are not given permission to Vote!!",});
     });
 }));
 
-passport.serializeUser((user, done) => {done(null, user);});
-passport.deserializeUser((obj, done) => {done(null, obj);});
+passport.serializeUser((user, done) => {
+    // console.log(user);
+    // console.log("Serialize the user with ID: ",user.id);
+    done(null, user);});
+
+passport.deserializeUser((obj, done) => {
+    // console.log("obj: ",obj);
+    // console.log("deserializing user",obj.id);
+    done(null, obj);});
 
 // dashboard page
 app.get("/",(request,response)=>{
@@ -110,14 +121,25 @@ app.get("/login",(request, response)=>{
 //admin  home page frontend
 app.get("/dashboard",connectEnsureLogin.ensureLoggedIn(),
   async(request,response)=>{
-    const loggedInAdminID = request.user.id;
-    const admin = await Admins.findByPk(loggedInAdminID);
-    const elections = await Elections.findAll({where: {adminID: request.user.id},});
-    response.render("dashboard",{
-        username: admin.name,
-        elections: elections,
-        csrf: request.csrfToken(),
-    });
+    try{
+        const loggedInAdminID = request.user.id;
+        // console.log("loggedinAdminID: ",loggedInAdminID);
+        const admin = await Admins.findByPk(loggedInAdminID);
+        const electionList = await Elections.findAll({where: {adminID: request.user.id},});
+        if(request.accepts("html")){
+            // console.log({ electionList });
+            // response.json(electionList);
+            response.render("dashboard",{
+                username: admin.adminName,
+                elections: electionList,
+                csrf: request.csrfToken(),
+            });
+        }else{
+            response.json({ electionList });
+        } 
+    } catch (error){
+        console.log(error);
+    }
   }
 );
 
@@ -141,7 +163,7 @@ app.post("/addAdmin",async(request, response)=>{
         return response.redirect("/adminSignup");
     }
 
-    const hashpswd = await bcrypt.hash(request.body.password, 10);
+    const hashpswd = await bcrypt.hash(request.body.password, saltRounds);
     try{
         const user = await Admins.create({
             adminName: request.body.name,
@@ -151,7 +173,6 @@ app.post("/addAdmin",async(request, response)=>{
         request.login(user, (err)=>{
             if(err){
                 console.log(err);
-                response.redirect("/");
             }
             else{
                 // request.flash("success","Sign up successful");
@@ -159,13 +180,57 @@ app.post("/addAdmin",async(request, response)=>{
             }
         });
     } catch(error){
-        request.flash("error", "Email ID is already in use!");
+        // request.flash("error", "Email ID is already in use!");
         return response.redirect("/adminSignup")
     }
 
 })
 
+//create new election
+app.post("/election",connectEnsureLogin.ensureLoggedIn(),
+async (request,response)=>{
+    if(request.body.name.trim().length===0){
+        console.log("Election name cannot be emoty");
+        return response.redirect("/dashboard");
+    }
+    const loggedInAdminID = request.user.id;
+    console.log("LoggedInAdminID---------",loggedInAdminID);
+    const admin = await Admins.findByPk(loggedInAdminID);
+    console.log("loggedAdmin:----",admin);
+    const username = admin.adminName;
+    console.log("loggedAdminName:----",username);
+    console.log("electionName:----",request.body.name);
+    const result = await Elections.findOne({
+        where:{adminID: loggedInAdminID, electionName: request.body.name},
+    });
 
+    console.log("result--------",result);
+
+    if(result){
+        console.log("***************Election name is already used************");
+        return response.redirect("/dashboard");
+    }
+
+    try{
+        const electionName = request.body.name;
+        await Elections.add(electionName, loggedInAdminID);
+        response.redirect("/dashboard");
+    }catch(error){
+        console.log("Line 214 error:*****")
+        console.log(error);
+        response.send(error);
+    }
+}
+)
+
+app.get("/elections/:id/results",async (request,response)=>{
+    const election = await Elections.findByPk(request.params.id);
+    if(!election.isElectionLive || (request.user && request.user.isAdmin)){
+        response.render("results")
+    }else{
+        response.send("Election is not yet ended.");
+    }
+});
 
 //login page
 // app.get("/", (request, response) => {
@@ -185,8 +250,11 @@ app.post("/addAdmin",async(request, response)=>{
 //     response.redirect("/dashboard");
 // });
 
-app.post("/session",passport.authenticate("admin-local", {failureRedirect: "/",failureFlash: true,}),
-  function (request, response) {
+app.post("/session",passport.authenticate("admin-local", {
+    failureRedirect: "/login",
+    failureFlash: true,
+}),
+  (request, response)=> {
     response.redirect("/dashboard");
   }
 );
