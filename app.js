@@ -32,10 +32,12 @@ app.use((request, response, next)=>{
     next();
 });
 
-app.use(express.static("images"));
+app.use(express.static(path.join(__dirname, "public")));
 app.use(passport.initialize());
 app.use(passport.session());
 
+app.set("views", path.join(__dirname,"views"));
+app.set("view engine", "ejs");
 
 
 //passport session for admin
@@ -59,8 +61,6 @@ passport.use("admin-local",new LocalStratergy({
     })
 }));
 
-app.set("views", path.join(__dirname,"views"));
-app.set("view engine", "ejs");
 
 //passport session for voter
 
@@ -88,24 +88,43 @@ passport.use("voter-local",new LocalStratergy({
 passport.serializeUser((user, done) => {done(null, user);});
 passport.deserializeUser((obj, done) => {done(null, obj);});
 
+// dashboard page
+app.get("/",(request,response)=>{
+    response.render("landingPage");
+})
 
-//loginpage(landing page)
-app.get("/",(request, response)=>{
+// signup page frontend
+app.get("/signup",(request,response)=>{
+    response.render("adminSignup",{csrf: request.csrfToken()});
+})
+
+//loginpage//refer Prathams line number 117 app.js
+// login page frontend
+app.get("/login",(request, response)=>{
     if(request.user && request.user.id){
-        return response.redirect("/home");
+        return response.redirect("/landingPage");
     }
     response.render("adminLogin", { csrf: request.csrfToken() });
 })
 
-//SignUp page
-app.get("/adminSignup", (request,response)=>{
-    response.render("adminSignup", {csrf: request.csrfToken()});
-});
+//admin  home page frontend
+app.get("/dashboard",connectEnsureLogin.ensureLoggedIn(),
+  async(request,response)=>{
+    const loggedInAdminID = request.user.id;
+    const admin = await Admins.findByPk(loggedInAdminID);
+    const elections = await Elections.findAll({where: {adminID: request.user.id},});
+    response.render("dashboard",{
+        username: admin.name,
+        elections: elections,
+        csrf: request.csrfToken(),
+    });
+  }
+);
 
 //create new Admin(Signing Up)
 app.post("/addAdmin",async(request, response)=>{
     if (request.body.name.length === 0) {
-        request.flash("error", "Username cannot be empty!");
+        request.flash("error", "Name cannot be empty!");
         return response.redirect("/adminSignup");
     }
     if(request.body.email.trim().length === 0){
@@ -124,8 +143,8 @@ app.post("/addAdmin",async(request, response)=>{
 
     const hashpswd = await bcrypt.hash(request.body.password, 10);
     try{
-        const admin = await Admins.create({
-            name: request.body.name,
+        const user = await Admins.create({
+            adminName: request.body.name,
             email: request.body.email,
             password: hashpswd,
         });
@@ -135,28 +154,41 @@ app.post("/addAdmin",async(request, response)=>{
                 response.redirect("/");
             }
             else{
-                request.flash("success","Sign up successful");
-                response.redirect("/home");
+                // request.flash("success","Sign up successful");
+                response.redirect("/dashboard");
             }
         });
     } catch(error){
-        request.flash("error", error.message);
+        request.flash("error", "Email ID is already in use!");
         return response.redirect("/adminSignup")
     }
 
 })
 
-//Logging In the Admin
-app.get("/home", connectEnsureLogin.ensureLoggedIn(),
-    async(request,response)=>{
-        const loggedInAdminID = request.user.id;
-        const admin = await Admins.findByPk(loggedInAdminID);
-        const elections = await Elections.findAll({where: { adminID: request.user.id },});
-        response.render("/home", {
-            username: admin.name,
-            elections: elections,
-            csrf: request.csrfToken(),
-        });
-    }
-)
+
+
+//login page
+// app.get("/", (request, response) => {
+//     if (request.user) {
+//       return response.redirect("/dashboard");
+//     }
+//     response.render("/");
+//   });
+
+// admin dashboard page frontend
+
+// app.post("/adminLogin",passport.authenticate("Admins",{
+//     failureRedirect:"/",
+//     failureFlash: true,
+// }),
+// (request,response)=>{
+//     response.redirect("/dashboard");
+// });
+
+app.post("/session",passport.authenticate("admin-local", {failureRedirect: "/",failureFlash: true,}),
+  function (request, response) {
+    response.redirect("/dashboard");
+  }
+);
+
 module.exports=app;

@@ -91,3 +91,8 @@ input{
     display: flex;
     justify-content: center;
 }
+
+.justify-center{
+    display: flex;
+    justify-content: center;
+}

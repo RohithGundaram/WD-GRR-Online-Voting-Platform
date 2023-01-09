@@ -11,11 +11,27 @@ module.exports = (sequelize, DataTypes) => {
      */
     static associate(models) {
       // define association here
+      Admins.hasMany(models.Elections, {
+        onDelete: "CASCADE",
+        foreignKey: "adminID",
+      });
+    }
+
+    static createAdmin({adminName, email, password}) {
+      return this.create({
+        adminName,
+        email,
+        password,
+      });
     }
   }
   Admins.init({
     adminName: DataTypes.STRING,
-    email: DataTypes.STRING,
+    email: {
+      type: DataTypes.STRING,
+      allowNull: false,
+      unique: true,
+    },
     password: DataTypes.STRING
   }, {
     sequelize,

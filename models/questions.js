@@ -11,7 +11,38 @@ module.exports = (sequelize, DataTypes) => {
      */
     static associate(models) {
       // define association here
+      Questions.belongsTo(models.Elections,{
+        onDelete: "CASCADE",
+        foreignKey: "electionID",
+      });
+      Questions.hasMany(models.Options,{
+        onDelete: "CASCADE",
+        foreignKey: "questionID",
+      });
     }
+
+    static async add({questionName, description, electionID}) {
+      return this.create({
+        questionName,
+        description,
+        electionID,
+      });
+    }
+
+    static async edit({questionName, description, id}) {
+      return this.update(
+        {
+          questionName,
+          description,
+        },
+        {where: {id}}
+      );
+    }
+
+    static async delete(id){
+      this.destroy({where:id})
+    }
+
   }
   Questions.init({
     questionName: DataTypes.STRING,

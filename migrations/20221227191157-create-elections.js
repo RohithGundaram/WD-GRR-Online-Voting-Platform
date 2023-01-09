@@ -15,6 +15,9 @@ module.exports = {
       isElectionLive: {
         type: Sequelize.BOOLEAN
       },
+      ended: {
+        type: Sequelize.BOOLEAN
+      },
       createdAt: {
         allowNull: false,
         type: Sequelize.DATE

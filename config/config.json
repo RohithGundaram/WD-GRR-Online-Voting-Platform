@@ -2,14 +2,14 @@
   "development": {
     "username": "postgres",
     "password": "postgrespassword",
-    "database": "capestone_dev",
+    "database": "capestone_dev_2",
     "host": "127.0.0.1",
     "dialect": "postgres"
   },
   "test": {
     "username": "postgres",
     "password": "postgrespassword",
-    "database": "capestone_test",
+    "database": "capestone_test_2",
     "host": "127.0.0.1",
     "dialect": "postgres"
   },
