@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="csrf-token" content="<%= csrf %>" />
+    <meta name="csrf-token" content="<%= csrf %>">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="css/styles.css">
@@ -24,26 +24,41 @@
     }
     </script>
 </head>
-<body  style="overflow: hidden;">
-    <div class="flex justify-center"><%- include ('header1') %></div>
-    <div class="body-class" style="background-image: url(images/bgimg.jpg); background-repeat: no-repeat;background-size: contain;">
-        <div class="flex-col bg-white login-form" style="justify-content: center;border-radius: 19px;position: relative;top: 3rem;left: 60%;width: 33%;height: 72%;padding: 2rem;">
-            <h1 class="fs-2 fw-bold" style="color: #1196b5;margin-left: 1rem;">Admin LogIn</h1>
-            <form action="/session" method="post" class="adminLoginForm" style="display: flex;flex-direction: column;">
-                <input type="hidden" name="_csrf" value="<%= csrf%>">
-                <div class="flex-col" style=" padding:1rem;">
+<body>
+    <nav class="navbar navbar-expand-lg bg-info-subtle">
+        <div class="container-fluid">
+            <div>
+                <a class="navbar-brand" href="/"><img src="images/logo.jpg" alt="Vote" class="logo-width" style="color: #1196b5;">Online Voting Platform</a>
+            </div>
+        </div>
+    </nav>
+    <div class="body-class">
+        <div class="flex-col bg-white login-form" style="justify-content: center;padding-left:5rem;border-radius: 19px;position: relative;top: 3rem;left: 48rem;width: 38%;height: 85%;">
+            <h1 class="fs-2 fw-bold" style="color: #1196b5;">Admin LogIn</h1>
+            
+            <form action="/session" method="post" class="adminLoginForm">
+                <input type="hidden" name="_csrf" value="<%= csrf %>">
+                <div class="flex-col" style="width: 75%; padding:1rem;">
                     <div class="justify-content-spacebetween">
                         <label style="margin:0.2em;font-weight: 500;" for="email">Email</label>
                         <span>Need an account? <a href="/signup" style="font-weight: bolder;color: #1196b5;">SignUp</a></span>
                     </div>
-                    <input style="margin:0.2em;width: 100%;" type="email" name="email" id="email">
+                    <input style="margin:0.2em;" type="email" name="email" id="email">
                     <div class="justify-content-spacebetween" style="margin-top: 10px;">
                         <label style="margin:0.2em;font-weight: 500;" for="password">Password</label>
                         <span style="margin-right: 15px;" onclick="togglePassword()"><i id="eye" class="fa-solid fa-eye"></i></span>
                     </div>
-                    <input style="margin:0.2em;width: 100%;" type="password" name="password" id="password">
+                    <input style="margin:0.2em;" type="password" name="password" id="password">
                 </div>
-                <button class="btn" type="submit" style="margin:1rem; background-color: #1196b5;color:white;width: 91%;">Log In</button>
+                <!-- flash messages -->
+                <div class="flex">
+                    <% if (messages && messages.error && messages.error.length > 0) { %>
+                        <% for(var i=0; i<messages.error.length; i++) { %>
+                            <p class="alert alert-danger my-1 mx-3 rounded-md px-4 py-2" role="alert" style="width: 69%;"><%= messages.error[i] %></p>
+                        <% } %>
+                    <% } %>
+                </div>
+                <button class="btn" style="margin:1rem; background-color: #1196b5;color:white;width: 69%">Log In</button>
             </form>
         </div>
     </div>

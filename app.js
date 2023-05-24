@@ -65,28 +65,27 @@ passport.use("admin-local",new LocalStratergy({
 
 
 //passport session for voter
+
 passport.use("voter-local",new LocalStratergy({
     usernameField: "voterID",
     passwordField: "password",
     passReqToCallback: true, //ckeck with and without
 },
 (request, voterID, password, done)=>{ //made some changes using rohithlingkar
-    Voters.findOne({where: {voterID: username, electionID: request.params.id},})
-    // Voters.findOne({where: { voterID: username },})
-    .then(async(voter)=>{
-    // .then(async(user)=>{
-        const result = await bcrypt.compare(password, voter.password);
+    // Voters.findOne({where: {voterID: username, electionID: request.params.id},})
+    Voters.findOne({where: { voterID },})
+    // .then(async(voter)=>{
+    .then(async(user)=>{
+        const result = await bcrypt.compare(password, user.password);
         if(result){
-            return done(null, voter);
+            return done(null, user);
         } else {
             return done(null, false, { message: "Invalid Password" });
         }
     })
     .catch((error)=>{
         // console.log(error);
-        return done(null, false, {
-            message: "Your are not given permission to Vote!!",
-        });
+        return done(null, false, {message: "Your are not given permission to Vote!!",});
     });
 }));
 
@@ -221,118 +220,8 @@ async (request,response)=>{
         console.log(error);
         response.send(error);
     }
-});
-
-//election home Page
-// app.get("/election", connectEnsureLogin.ensureLoggedIn(),
-//   async (request, response) => {
-//     const loggedInAdminID = request.user.id;
-//     const elections = await Elections.findAll({ where: { adminID: loggedInAdminID }, });
-//     return response.json({ elections });
-//   }
-// );
-
-// election home page
-app.get("/election/:id", connectEnsureLogin.ensureLoggedIn(),async (request, response) => {
-    const loggedInAdminID = request.user.id;
-    const admin = await Admins.findByPk(loggedInAdminID);
-    const electionsDetails = await Elections.findByPk(request.params.id);
-
-    if (loggedInAdminID !== elections.adminID) {
-      return response.render("error", {errorMessage: "You are not authorized to view this page",});
-    }
-    
-    const votersList = await Voters.findAll({
-        where: { electionID: request.params.id },
-    });
-    const questionsList = await Questions.findAll({
-      where: { electionID: request.params.id },
-    });
-
-    response.render("electionHome", {
-      election: electionsDetails,
-      username: admin.name,
-      questions: questionsList,
-      voters: votersList,
-      csrf: request.csrfToken(),
-    });
-  }
-);
-
-// create new election
-app.post("/election", connectEnsureLogin.ensureLoggedIn(),
-  async (request, response) => {
-    // if (request.body.name.trim().length === 0) {
-    // //   request.flash("error", "Enter election name");
-    // //   return response.redirect("/elections/new");
-    // }
-    const loggedInAdminID = request.user.id;
-    // const election = await Elections.findOne({
-    //   where: { adminID: loggedInAdminID, name: request.body.name },
-    // });
-
-    // if (election) {
-    //   request.flash("error", "Election name is already used!");
-    //   return response.redirect("/elections/new");
-    // }
-
-    try {
-      await Elections.add(loggedInAdminID, request.body.name);
-      response.redirect("/dashboard");
-    } catch (error) {
-      console.log(error);
-      response.send(error);
-    }
-  }
-);
-
-
-// delete election
-app.delete("/election/:id", connectEnsureLogin.ensureLoggedIn(),
-  async (request, response) => {
-    const adminID = request.user.id;
-    const electionDetails = await Elections.findByPk(request.params.id);
-
-    if (adminID !== electionDetails.adminID) {
-      console.log("You are not authorized to perform this operation");
-      return response.redirect("/landingPage");
-    }
-
-    // get all questions of that election
-    const questionsList = await Questions.findAll({
-      where: { electionID: request.params.id },
-    });
-
-    // delete all options and then questions of that election
-    questionsList.forEach(async (Question) => {
-      const options = await Options.findAll({
-        where: { questionID: Question.id },
-      });
-      options.forEach(async (option) => {
-        await Option.destroy({ where: { id: option.id } });
-      });
-      await Questions.destroy({ where: { id: Question.id } });
-    });
-    // delete voters of the election
-    const votersList = await Voters.findAll({
-        where: { electionID: request.params.id },
-      });
-      votersList.forEach(async (voter) => {
-        await Voters.destroy({ where: { id: voter.id } });
-      });
-  
-      try {
-        await Elections.destroy({ where: { id: request.params.id } });
-        return response.json({ ok: true });
-      } catch (error) {
-        console.log(error);
-        response.send(error);
-      }
-});
- 
-
-
-
+}
+)
 
 app.get("/elections/:id/results",async (request,response)=>{
     const election = await Elections.findByPk(request.params.id);
