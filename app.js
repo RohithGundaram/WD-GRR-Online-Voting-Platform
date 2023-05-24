@@ -103,6 +103,9 @@ passport.deserializeUser((obj, done) => {
 app.get("/",(request,response)=>{
     response.render("landingPage");
 })
+app.get("/landingPage",(request,response)=>{
+    response.render("landingPage");
+})
 
 // signup page frontend
 app.get("/signup",(request,response)=>{
